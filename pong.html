@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game - Vulcan Cyber Edition</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #D6F1EC; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        #logo {
+            margin-bottom: 20px;
+        }
+        canvas {
+            border: 2px solid #003A5D;
+            background-color: #D6F1EC;
+        }
+        h1 {
+            color: #003A5D;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Vulcan Cyber Logo -->
+    <img id="logo" src="https://cdn-golcf.nitrocdn.com/TGEgbQPyoGRVMTiQafGFUSTTaJcqNCPp/assets/images/optimized/rev-ee232cd/vulcan.io/wp-content/uploads/2024/06/Logo-2.png" alt="Vulcan Cyber Logo" width="200" />
+    <h1>Pong Game - Vulcan Cyber Edition</h1>
+
+    <canvas id="pongCanvas" width="800" height="600"></canvas>
+
+    <script>
+        const canvas = document.getElementById("pongCanvas");
+        const context = canvas.getContext("2d");
+
+        // Game variables
+        const paddleWidth = 10;
+        const paddleHeight = 100;
+        const ballSize = 10;
+        let playerPaddleY = canvas.height / 2 - paddleHeight / 2;
+        let aiPaddleY = canvas.height / 2 - paddleHeight / 2;
+        let ballX = canvas.width / 2;
+        let ballY = canvas.height / 2;
+        let ballSpeedX = 4;
+        let ballSpeedY = 4;
+        const playerSpeed = 8;
+        const aiSpeed = 4;
+
+        // Scoring variables
+        let playerScore = 0;
+        let aiScore = 0;
+
+        // Function to draw a rectangle (paddles)
+        function drawRect(x, y, w, h, color) {
+            context.fillStyle = color;
+            context.fillRect(x, y, w, h);
+        }
+
+        // Function to draw the ball
+        function drawBall(x, y, size, color) {
+            context.fillStyle = color;
+            context.beginPath();
+            context.arc(x, y, size, 0, Math.PI * 2, false);
+            context.closePath();
+            context.fill();
+        }
+
+        // Function to draw the scores
+        function drawScores() {
+            context.fillStyle = "#003A5D"; // Dark teal for scores
+            context.font = "30px Arial";
+            context.fillText(`Player: ${playerScore}`, 50, canvas.height - 30);
+            context.fillText(`AI: ${aiScore}`, canvas.width - 150, canvas.height - 30);
+        }
+
+        // Reset ball position after scoring
+        function resetBall() {
+            ballX = canvas.width / 2;
+            ballY = canvas.height / 2;
+            ballSpeedX = -ballSpeedX;
+            ballSpeedY = (Math.random() * 4) - 2; // Random Y-direction on reset
+        }
+
+        // Move AI paddle
+        function moveAIPaddle() {
+            const aiCenter = aiPaddleY + paddleHeight / 2;
+            if (aiCenter < ballY - 35) {
+                aiPaddleY += aiSpeed;
+            } else if (aiCenter > ballY + 35) {
+                aiPaddleY -= aiSpeed;
+            }
+        }
+
+        // Move the ball and check for collisions
+        function moveBall() {
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // Ball collision with top and bottom walls
+            if (ballY <= 0 || ballY >= canvas.height) {
+                ballSpeedY = -ballSpeedY;
+            }
+
+            // Ball collision with player paddle
+            if (ballX <= paddleWidth && ballY > playerPaddleY && ballY < playerPaddleY + paddleHeight) {
+                ballSpeedX = -ballSpeedX;
+                const deltaY = ballY - (playerPaddleY + paddleHeight / 2);
+                ballSpeedY = deltaY * 0.35;
+            }
+
+            // Ball collision with AI paddle
+            if (ballX >= canvas.width - paddleWidth && ballY > aiPaddleY && ballY < aiPaddleY + paddleHeight) {
+                ballSpeedX = -ballSpeedX;
+                const deltaY = ballY - (aiPaddleY + paddleHeight / 2);
+                ballSpeedY = deltaY * 0.35;
+            }
+
+            // Check if the player or AI scores
+            if (ballX <= 0) {
+                aiScore++; // AI scores
+                resetBall(); // Reset the ball after scoring
+            } else if (ballX >= canvas.width) {
+                playerScore++; // Player scores
+                resetBall(); // Reset the ball after scoring
+            }
+        }
+
+        // Draw the game, including paddles, ball, and scores
+        function drawGame() {
+            // Clear the canvas
+            drawRect(0, 0, canvas.width, canvas.height, "#D6F1EC"); // Light grayish cyan background
+
+            // Draw paddles
+            drawRect(0, playerPaddleY, paddleWidth, paddleHeight, "#003A5D"); // Dark teal paddle
+            drawRect(canvas.width - paddleWidth, aiPaddleY, paddleWidth, paddleHeight, "#003A5D"); // AI paddle
+
+            // Draw ball
+            drawBall(ballX, ballY, ballSize, "#85E2BD"); // Mint green ball
+
+            // Draw scores
+            drawScores();
+
+            // Move the ball
+            moveBall();
+
+            // Move AI paddle
+            moveAIPaddle();
+        }
+
+        // Update the player's paddle position based on mouse movement
+        canvas.addEventListener("mousemove", function(evt) {
+            const rect = canvas.getBoundingClientRect();
+            const root = document.documentElement;
+            const mouseY = evt.clientY - rect.top - root.scrollTop;
+            playerPaddleY = mouseY - paddleHeight / 2;
+        });
+
+        // Game loop
+        function gameLoop() {
+            drawGame();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game loop
+        gameLoop();
+    </script>
+</body>
+</html>
